@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Ratings Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .star-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .star-filled {
+            color: #FCD34D;
+        }
+        .star-empty {
+            color: #D1D5DB;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #F59E0B 0%, #F59E0B var(--progress), #E5E7EB var(--progress), #E5E7EB 100%);
+            border-radius: 4px;
+            height: 8px;
+        }
+        .supplier-card:hover {
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-orange {
+            background-color: #FED7AA;
+            color: #C2410C;
+        }
+        .verified-badge {
+            background-color: #D1FAE5;
+            color: #059669;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">Supplier Ratings & Reviews</h1>
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="star" class="h-5 w-5 text-yellow-500"></i>
+                    <span class="text-sm text-gray-600">Quality Assured Suppliers</span>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="filter" class="h-4 w-4 text-gray-500"></i>
+                    <span class="text-sm font-medium text-gray-700">Filters:</span>
+                </div>
+                
+                <select id="categoryFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="all">All Categories</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="grains">Grains & Cereals</option>
+                    <option value="dairy">Dairy Products</option>
+                    <option value="spices">Spices & Condiments</option>
+                    <option value="meat">Meat & Poultry</option>
+                </select>
+
+                <select id="ratingFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="all">All Ratings</option>
+                    <option value="5">5 Star Only</option>
+                    <option value="4+">4+ Stars</option>
+                    <option value="3+">3+ Stars</option>
+                </select>
+
+                <select id="locationFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="all">All Locations</option>
+                    <option value="mumbai">Mumbai</option>
+                    <option value="delhi">Delhi</option>
+                    <option value="bangalore">Bangalore</option>
+                    <option value="pune">Pune</option>
+                </select>
+
+                <select id="sortBy" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                    <option value="rating">Sort by Rating</option>
+                    <option value="reviews">Sort by Review Count</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="price">Sort by Price</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Overall Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Suppliers</p>
+                        <p id="totalSuppliers" class="text-2xl font-bold text-gray-900">156</p>
+                        <p class="text-sm text-green-600 flex items-center mt-1">
+                            <i data-lucide="trending-up" class="h-4 w-4 mr-1"></i>
+                            <span id="supplierGrowth">+12 this month</span>
+                        </p>
+                    </div>
+                    <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="users" class="h-6 w-6 text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Average Rating</p>
+                        <p id="avgRating" class="text-2xl font-bold text-gray-900">4.2/5</p>
+                        <p class="text-sm text-green-600 flex items-center mt-1">
+                            <i data-lucide="star" class="h-4 w-4 mr-1"></i>
+                            <span id="ratingTrend">+0.3 this quarter</span>
+                        </p>
+                    </div>
+                    <div class="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="star" class="h-6 w-6 text-yellow-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Reviews</p>
+                        <p id="totalReviews" class="text-2xl font-bold text-gray-900">2,347</p>
+                        <p class="text-sm text-blue-600 flex items-center mt-1">
+                            <i data-lucide="message-circle" class="h-4 w-4 mr-1"></i>
+                            <span id="reviewGrowth">+89 this week</span>
+                        </p>
+                    </div>
+                    <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="message-square" class="h-6 w-6 text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Top Rated</p>
+                        <p id="topRatedCount" class="text-2xl font-bold text-gray-900">47</p>
+                        <p class="text-sm text-green-600 flex items-center mt-1">
+                            <i data-lucide="award" class="h-4 w-4 mr-1"></i>
+                            <span id="topRatedPercent">30% of suppliers</span>
+                        </p>
+                    </div>
+                    <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i data-lucide="award" class="h-6 w-6 text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Distribution and Category Overview -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Rating Distribution</h3>
+                <div id="ratingDistribution" class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium">5 Stars</span>
+                            <div class="star-rating">
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="progress-bar w-24" style="--progress: 30%"></div>
+                            <span class="text-sm text-gray-600 w-8">47</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium">4 Stars</span>
+                            <div class="star-rating">
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="progress-bar w-24" style="--progress: 40%"></div>
+                            <span class="text-sm text-gray-600 w-8">62</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium">3 Stars</span>
+                            <div class="star-rating">
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="progress-bar w-24" style="--progress: 20%"></div>
+                            <span class="text-sm text-gray-600 w-8">31</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium">2 Stars</span>
+                            <div class="star-rating">
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="progress-bar w-24" style="--progress: 8%"></div>
+                            <span class="text-sm text-gray-600 w-8">12</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm font-medium">1 Star</span>
+                            <div class="star-rating">
+                                <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="progress-bar w-24" style="--progress: 2%"></div>
+                            <span class="text-sm text-gray-600 w-8">4</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Performance</h3>
+                <div id="categoryPerformance" class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="carrot" class="h-4 w-4 text-green-600"></i>
+                            </div>
+                            <span class="font-medium">Vegetables</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="star-rating">
+                                <span class="text-sm font-bold">4.5</span>
+                                <i data-lucide="star" class="h-4 w-4 star-filled ml-1"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">45 suppliers</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="wheat" class="h-4 w-4 text-amber-600"></i>
+                            </div>
+                            <span class="font-medium">Grains</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="star-rating">
+                                <span class="text-sm font-bold">4.2</span>
+                                <i data-lucide="star" class="h-4 w-4 star-filled ml-1"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">32 suppliers</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="milk" class="h-4 w-4 text-blue-600"></i>
+                            </div>
+                            <span class="font-medium">Dairy</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="star-rating">
+                                <span class="text-sm font-bold">4.1</span>
+                                <i data-lucide="star" class="h-4 w-4 star-filled ml-1"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">28 suppliers</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i data-lucide="flame" class="h-4 w-4 text-red-600"></i>
+                            </div>
+                            <span class="font-medium">Spices</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="star-rating">
+                                <span class="text-sm font-bold">4.3</span>
+                                <i data-lucide="star" class="h-4 w-4 star-filled ml-1"></i>
+                            </div>
+                            <span class="text-sm text-gray-600">25 suppliers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier List -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Supplier Directory</h3>
+            <div id="supplierList" class="space-y-6">
+                
+                <!-- Supplier 1 -->
+                <div class="supplier-card border border-gray-200 rounded-lg p-6" data-supplier-id="SUP001">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                F
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <h4 class="text-lg font-semibold text-gray-900" id="supplier1-name">Fresh Farm Vegetables</h4>
+                                    <span class="verified-badge badge">
+                                        <i data-lucide="check-circle" class="h-3 w-3 mr-1"></i>
+                                        Verified
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                                    <span class="flex items-center">
+                                        <i data-lucide="map-pin" class="h-4 w-4 mr-1"></i>
+                                        <span id="supplier1-location">Mumbai, Maharashtra</span>
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i data-lucide="tag" class="h-4 w-4 mr-1"></i>
+                                        <span id="supplier1-category">Vegetables</span>
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i data-lucide="calendar" class="h-4 w-4 mr-1"></i>
+                                        Since <span id="supplier1-year">2018</span>
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mb-3" id="supplier1-specialties">
+                                    <span class="badge badge-orange">Organic Vegetables</span>
+                                    <span class="badge badge-orange">Fresh Leafy Greens</span>
+                                    <span class="badge badge-orange">Seasonal Produce</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center mb-2">
+                                <div class="star-rating">
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                </div>
+                                <span class="ml-2 text-sm font-medium text-gray-900" id="supplier1-rating">4.8</span>
+                            </div>
+                            <div class="text-sm text-gray-600"><span id="supplier1-reviews">156</span> reviews</div>
+                            <div class="text-lg font-semibold text-gray-900 mt-1" id="supplier1-price">₹15-45/kg</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600" id="supplier1-quality">95%</div>
+                            <div class="text-xs text-gray-600">Quality Score</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="supplier1-reliability">92%</div>
+                            <div class="text-xs text-gray-600">Reliability</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600" id="supplier1-satisfaction">96%</div>
+                            <div class="text-xs text-gray-600">Satisfaction</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="clock" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier1-delivery">2-4 hours</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="shopping-cart" class="h-4 w-4 mr-2"></i>
+                            Min: <span id="supplier1-minorder">₹500</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="phone" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier1-contact">+91 98765 43210</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="mail" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier1-email">contact@freshfarm.in</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+                                Contact Supplier
+                            </button>
+                            <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                                View Details
+                            </button>
+                        </div>
+                        <button class="px-4 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors text-sm">
+                            Write Review
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Supplier 2 -->
+                <div class="supplier-card border border-gray-200 rounded-lg p-6" data-supplier-id="SUP002">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                G
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <h4 class="text-lg font-semibold text-gray-900" id="supplier2-name">Golden Grains Co.</h4>
+                                    <span class="verified-badge badge">
+                                        <i data-lucide="check-circle" class="h-3 w-3 mr-1"></i>
+                                        Verified
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                                    <span class="flex items-center">
+                                        <i data-lucide="map-pin" class="h-4 w-4 mr-1"></i>
+                                        <span id="supplier2-location">Delhi, NCR</span>
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i data-lucide="tag" class="h-4 w-4 mr-1"></i>
+                                        <span id="supplier2-category">Grains</span>
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i data-lucide="calendar" class="h-4 w-4 mr-1"></i>
+                                        Since <span id="supplier2-year">2015</span>
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mb-3" id="supplier2-specialties">
+                                    <span class="badge badge-orange">Premium Rice</span>
+                                    <span class="badge badge-orange">Wheat Flour</span>
+                                    <span class="badge badge-orange">Pulses & Lentils</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center mb-2">
+                                <div class="star-rating">
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                </div>
+                                <span class="ml-2 text-sm font-medium text-gray-900" id="supplier2-rating">4.5</span>
+                            </div>
+                            <div class="text-sm text-gray-600"><span id="supplier2-reviews">89</span> reviews</div>
+                            <div class="text-lg font-semibold text-gray-900 mt-1" id="supplier2-price">₹25-80/kg</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600" id="supplier2-quality">88%</div>
+                            <div class="text-xs text-gray-600">Quality Score</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="supplier2-reliability">94%</div>
+                            <div class="text-xs text-gray-600">Reliability</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600" id="supplier2-satisfaction">91%</div>
+                            <div class="text-xs text-gray-600">Satisfaction</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="clock" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier2-delivery">4-6 hours</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="shopping-cart" class="h-4 w-4 mr-2"></i>
+                            Min: <span id="supplier2-minorder">₹1000</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="phone" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier2-contact">+91 87654 32109</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="mail" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier2-email">orders@goldengrains.co.in</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+                                Contact Supplier
+                            </button>
+                            <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                                View Details
+                            </button>
+                        </div>
+                        <button class="px-4 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors text-sm">
+                            Write Review
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Supplier 3 -->
+                <div class="supplier-card border border-gray-200 rounded-lg p-6" data-supplier-id="SUP003">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                                S
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <h4 class="text-lg font-semibold text-gray-900" id="supplier3-name">Spice Master Trading</h4>
+                                    <span class="verified-badge badge">
+                                        <i data-lucide="check-circle" class="h-3 w-3 mr-1"></i>
+                                        Verified
+                                    </span>
+                                </div>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                                    <span class="flex items-center">
+                                        <i data-lucide="map-pin" class="h-4 w-4 mr-1"></i>
+                                        <span id="supplier3-location">Bangalore, Karnataka</span>
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i data-lucide="tag" class="h-4 w-4 mr-1"></i>
+                                        <span id="supplier3-category">Spices</span>
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i data-lucide="calendar" class="h-4 w-4 mr-1"></i>
+                                        Since <span id="supplier3-year">2012</span>
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mb-3" id="supplier3-specialties">
+                                    <span class="badge badge-orange">Authentic Spices</span>
+                                    <span class="badge badge-orange">Masala Blends</span>
+                                    <span class="badge badge-orange">Dried Herbs</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center mb-2">
+                                <div class="star-rating">
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                </div>
+                                <span class="ml-2 text-sm font-medium text-gray-900" id="supplier3-rating">4.6</span>
+                            </div>
+                            <div class="text-sm text-gray-600"><span id="supplier3-reviews">203</span> reviews</div>
+                            <div class="text-lg font-semibold text-gray-900 mt-1" id="supplier3-price">₹80-300/kg</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600" id="supplier3-quality">97%</div>
+                            <div class="text-xs text-gray-600">Quality Score</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="supplier3-reliability">89%</div>
+                            <div class="text-xs text-gray-600">Reliability</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600" id="supplier3-satisfaction">94%</div>
+                            <div class="text-xs text-gray-600">Satisfaction</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                        <div class="flex items-center">
+                            <i data-lucide="clock" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier3-delivery">6-8 hours</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="shopping-cart" class="h-4 w-4 mr-2"></i>
+                            Min: <span id="supplier3-minorder">₹750</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="phone" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier3-contact">+91 76543 21098</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i data-lucide="mail" class="h-4 w-4 mr-2"></i>
+                            <span id="supplier3-email">info@spicemaster.in</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+                                Contact Supplier
+                            </button>
+                            <button class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                                View Details
+                            </button>
+                        </div>
+                        <button class="px-4 py-2 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors text-sm">
+                            Write Review
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Recent Reviews -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Recent Reviews</h3>
+            <div id="recentReviews" class="space-y-4">
+                
+                <!-- Review 1 -->
+                <div class="border border-gray-200 rounded-lg p-4" data-review-id="REV001">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-1">
+                                <h5 class="font-medium text-gray-900" id="review1-reviewer">Raj's Street Food</h5>
+                                <span class="text-sm text-gray-500">reviewed</span>
+                                <span class="font-medium text-orange-600" id="review1-supplier">Fresh Farm Vegetables</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="star-rating">
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                </div>
+                                <span class="text-sm text-gray-600" id="review1-date">2 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-3" id="review1-comment">Excellent quality vegetables, always fresh and delivered on time. Highly recommended!</p>
+                    <div class="flex items-center justify-between text-sm">
+                        <button class="flex items-center text-gray-600 hover:text-gray-900">
+                            <i data-lucide="thumbs-up" class="h-4 w-4 mr-1"></i>
+                            Helpful (<span id="review1-helpful">12</span>)
+                        </button>
+                        <button class="text-orange-600 hover:text-orange-700">Reply</button>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="border border-gray-200 rounded-lg p-4" data-review-id="REV002">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-1">
+                                <h5 class="font-medium text-gray-900" id="review2-reviewer">Mumbai Chaat Corner</h5>
+                                <span class="text-sm text-gray-500">reviewed</span>
+                                <span class="font-medium text-orange-600" id="review2-supplier">Golden Grains Co.</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="star-rating">
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-empty"></i>
+                                </div>
+                                <span class="text-sm text-gray-600" id="review2-date">5 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-3" id="review2-comment">Good quality rice and flour. Pricing is competitive. Sometimes delivery gets delayed.</p>
+                    <div class="flex items-center justify-between text-sm">
+                        <button class="flex items-center text-gray-600 hover:text-gray-900">
+                            <i data-lucide="thumbs-up" class="h-4 w-4 mr-1"></i>
+                            Helpful (<span id="review2-helpful">8</span>)
+                        </button>
+                        <button class="text-orange-600 hover:text-orange-700">Reply</button>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="border border-gray-200 rounded-lg p-4" data-review-id="REV003">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <div class="flex items-center space-x-2 mb-1">
+                                <h5 class="font-medium text-gray-900" id="review3-reviewer">Delhi Street Kitchen</h5>
+                                <span class="text-sm text-gray-500">reviewed</span>
+                                <span class="font-medium text-orange-600" id="review3-supplier">Spice Master Trading</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="star-rating">
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                    <i data-lucide="star" class="h-4 w-4 star-filled"></i>
+                                </div>
+                                <span class="text-sm text-gray-600" id="review3-date">1 week ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 mb-3" id="review3-comment">Amazing spice quality! The masala blends are authentic and really enhance our food taste.</p>
+                    <div class="flex items-center justify-between text-sm">
+                        <button class="flex items-center text-gray-600 hover:text-gray-900">
+                            <i data-lucide="thumbs-up" class="h-4 w-4 mr-1"></i>
+                            Helpful (<span id="review3-helpful">15</span>)
+                        </button>
+                        <button class="text-orange-600 hover:text-orange-700">Reply</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize Lucide icons when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+
+        // Example function to update content from JSON
+        function updateFromJSON(data) {
+            // Update statistics
+            if (data.statistics) {
+                const stats = data.statistics;
+                if (stats.totalSuppliers) document.getElementById('totalSuppliers').textContent = stats.totalSuppliers;
+                if (stats.supplierGrowth) document.getElementById('supplierGrowth').textContent = stats.supplierGrowth;
+                if (stats.avgRating) document.getElementById('avgRating').textContent = stats.avgRating;
+                if (stats.ratingTrend) document.getElementById('ratingTrend').textContent = stats.ratingTrend;
+                if (stats.totalReviews) document.getElementById('totalReviews').textContent = stats.totalReviews;
+                if (stats.reviewGrowth) document.getElementById('reviewGrowth').textContent = stats.reviewGrowth;
+                if (stats.topRatedCount) document.getElementById('topRatedCount').textContent = stats.topRatedCount;
+                if (stats.topRatedPercent) document.getElementById('topRatedPercent').textContent = stats.topRatedPercent;
+            }
+
+            // Update suppliers
+            if (data.suppliers) {
+                data.suppliers.forEach((supplier, index) => {
+                    const supplierNum = index + 1;
+                    const prefix = `supplier${supplierNum}`;
+                    
+                    if (document.getElementById(`${prefix}-name`)) document.getElementById(`${prefix}-name`).textContent = supplier.name || '';
+                    if (document.getElementById(`${prefix}-location`)) document.getElementById(`${prefix}-location`).textContent = supplier.location || '';
+                    if (document.getElementById(`${prefix}-category`)) document.getElementById(`${prefix}-category`).textContent = supplier.category || '';
+                    if (document.getElementById(`${prefix}-year`)) document.getElementById(`${prefix}-year`).textContent = supplier.establishedYear || '';
+                    if (document.getElementById(`${prefix}-rating`)) document.getElementById(`${prefix}-rating`).textContent = supplier.rating || '';
+                    if (document.getElementById(`${prefix}-reviews`)) document.getElementById(`${prefix}-reviews`).textContent = supplier.reviewCount || '';
+                    if (document.getElementById(`${prefix}-price`)) document.getElementById(`${prefix}-price`).textContent = supplier.priceRange || '';
+                    if (document.getElementById(`${prefix}-quality`)) document.getElementById(`${prefix}-quality`).textContent = supplier.qualityScore + '%' || '';
+                    if (document.getElementById(`${prefix}-reliability`)) document.getElementById(`${prefix}-reliability`).textContent = supplier.reliabilityScore + '%' || '';
+                    if (document.getElementById(`${prefix}-satisfaction`)) document.getElementById(`${prefix}-satisfaction`).textContent = supplier.customerSatisfaction + '%' || '';
+                    if (document.getElementById(`${prefix}-delivery`)) document.getElementById(`${prefix}-delivery`).textContent = supplier.deliveryTime || '';
+                    if (document.getElementById(`${prefix}-minorder`)) document.getElementById(`${prefix}-minorder`).textContent = supplier.minOrder || '';
+                    if (document.getElementById(`${prefix}-contact`)) document.getElementById(`${prefix}-contact`).textContent = supplier.contact || '';
+                    if (document.getElementById(`${prefix}-email`)) document.getElementById(`${prefix}-email`).textContent = supplier.email || '';
+                    
+                    // Update specialties
+                    if (supplier.specialties && document.getElementById(`${prefix}-specialties`)) {
+                        const specialtiesContainer = document.getElementById(`${prefix}-specialties`);
+                        specialtiesContainer.innerHTML = supplier.specialties.map(specialty => 
+                            `<span class="badge badge-orange">${specialty}</span>`
+                        ).join('');
+                    }
+                });
+            }
+
+            // Update reviews
+            if (data.reviews) {
+                data.reviews.forEach((review, index) => {
+                    const reviewNum = index + 1;
+                    const prefix = `review${reviewNum}`;
+                    
+                    if (document.getElementById(`${prefix}-reviewer`)) document.getElementById(`${prefix}-reviewer`).textContent = review.reviewerName || '';
+                    if (document.getElementById(`${prefix}-supplier`)) document.getElementById(`${prefix}-supplier`).textContent = review.supplierName || '';
+                    if (document.getElementById(`${prefix}-date`)) document.getElementById(`${prefix}-date`).textContent = review.date || '';
+                    if (document.getElementById(`${prefix}-comment`)) document.getElementById(`${prefix}-comment`).textContent = review.comment || '';
+                    if (document.getElementById(`${prefix}-helpful`)) document.getElementById(`${prefix}-helpful`).textContent = review.helpful || '';
+                });
+            }
+        }
+
+        // Example usage:
+        /*
+        const sampleData = {
+            statistics: {
+                totalSuppliers: 180,
+                avgRating: "4.3/5",
+                totalReviews: 2500
+            },
+            suppliers: [
+                {
+                    name: "Updated Supplier Name",
+                    location: "Updated Location",
+                    rating: 4.9,
+                    reviewCount: 200,
+                    specialties: ["New Specialty 1", "New Specialty 2"]
+                }
+            ]
+        };
+        updateFromJSON(sampleData);
+        */
+    </script>
+</body>
+</html>
+                
